@@ -1,0 +1,3 @@
+pybuilder==0.11.17
+tailer==0.4.1
+tblib==1.3.2
