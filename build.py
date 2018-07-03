@@ -16,7 +16,7 @@ use_plugin("python.flake8")
 use_plugin("python.coverage")
 
 # The project name
-name = "cbex-nlp-app"
+name = "causality"
 
 default_task = ['install_dependencies', 'publish']
 
