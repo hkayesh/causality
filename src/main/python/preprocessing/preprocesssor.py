@@ -21,6 +21,7 @@ class Preprocessor:
         self.lower = True if 'lower' in params else False
         self.lemmatize = True if 'lemmatize' in params else False
         self.stemming = True if 'stemming' in params else False
+        self.remove_non_letters = True if 'remove_non_letters' in params else False
         self.lemmatizer = WordNetLemmatizer()
         self.stemmer = PorterStemmer()
         self.utilities = Utilities()
@@ -40,6 +41,7 @@ class Preprocessor:
         processed_doc = self.remove_char_repeatation_from_text(processed_doc) if self.normalize else processed_doc
         processed_doc = self.remove_stopwords_from_str(processed_doc) if self.remove_stopwords else processed_doc
         processed_doc = self.remove_punctuation_from_str(processed_doc) if self.remove_punct else processed_doc
+        processed_doc = self.remove_non_letter_chars(processed_doc) if self.remove_non_letters else processed_doc
         processed_doc = self.lemmatize_doc(processed_doc) if self.lemmatize else processed_doc
         processed_doc = self.stem_doc(processed_doc) if self.stemming else processed_doc
 
@@ -63,7 +65,7 @@ class Preprocessor:
 
     def remove_char_repeatation_from_text(self, text):
 
-        processed_text = re.sub(r'(. ?)\1+', r'\1\1', text)
+        processed_text = re.sub(r'(. ?)\1+', r'\1', text)
 
         return processed_text
 
@@ -126,5 +128,18 @@ class Preprocessor:
                 lemmatized_token = self.stemmer.stem(token)
                 lemmatized_sent += lemmatized_token + ' '
             processed_doc += lemmatized_sent.strip()
+
+        return processed_doc
+
+    def remove_non_letter_chars(self, document):
+        """
+        Remove anything but letters and spaces
+
+        :param document: a string
+        :return string: a string that contains only letters and spaces
+        """
+        regex = re.compile('[^a-zA-Z ]')
+        processed_doc = regex.sub('', document)
+        processed_doc = re.sub(' +', ' ', processed_doc)  # remove multiple spaces
 
         return processed_doc

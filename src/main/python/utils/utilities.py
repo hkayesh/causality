@@ -130,3 +130,9 @@ class Utilities:
             return '%s%dm%ds' % (sign_string, minutes, seconds)
         else:
             return '%s%ds' % (sign_string, seconds)
+
+    def chunkify_list(self, data_list, items_per_chunk):
+        # For item i in a range that is a length of l,
+        for i in range(0, len(data_list), items_per_chunk):
+            # Create an index range for l of n items:
+            yield data_list[i:i + items_per_chunk]

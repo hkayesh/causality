@@ -1,14 +1,19 @@
-import datetime
+import timeit
 import collections
 
 from utils.utilities import Utilities
+from preprocessing.preprocesssor import Preprocessor
 from causality_detection.causal_stength_calculator import CausalStrengthCalculator
+from causality_detection.itemsest_causality import ItemsetCausality
 
 
 if __name__ == "__main__":
+    start_time = timeit.default_timer()
     event_file_path = 'events.csv'
     utilities = Utilities()
     causal_strength_calculator = CausalStrengthCalculator()
+    itemset_causality = ItemsetCausality()
+    preprocessor = Preprocessor(params=['lower', 'lemmatize'])
 
     rows = utilities.read_from_csv(event_file_path)
     header = rows[0]
@@ -31,7 +36,7 @@ if __name__ == "__main__":
             event_rows.append(row)
 
     meta_info = {}
-    for row in event_rows:
+    for row in event_rows[:100]:
         event_tokens = row[header.index('event_phrases')].split(',')
         meta_info[len(event_tokens)] = 1 if len(event_tokens) not in list(meta_info.keys()) else meta_info[len(event_tokens)] + 1
 
@@ -41,26 +46,25 @@ if __name__ == "__main__":
         # if len(row[header.index('entities')]) > 0 and row[header.index('locations')] and len(event_tokens) == 1:
         #    event_rows.append(row)
     filtered_events = []
-    for event_row in event_rows:
+    for event_row in event_rows[:100]:
         event_tokens = event_row[header.index('event_phrases')].split(',')
         if len(event_row[header.index('entities')]) > 0 and event_row[header.index('locations')] and len(event_tokens) == 1:
+            event_row[header.index('event_phrases')] = preprocessor.preprocess(event_row[header.index('event_phrases')].strip())
             filtered_events.append(event_row)
 
-    candidate_event_pairs = causal_strength_calculator.get_causality_candidates(event_rows[:10], header)
+    # entity_location_pairs = itemset_causality.get_entiry_location_pairs(filtered_events, header)
+    #
+    # keyword_relations = itemset_causality.get_keyword_relations(entity_location_pairs, filtered_events, header)
+    #
+    # truthful_relations = itemset_causality.get_truthful_relations(keyword_relations, filtered_events, header)
+    #
+    # common_goal_relations = itemset_causality.get_common_goal_relations(truthful_relations)
+    #
+    # causal_chains = itemset_causality.get_causal_chains(common_goal_relations, filtered_events, header)
 
-
-    causality_scores = []
-    for causal_event, effect_event in candidate_event_pairs:
-        causal_candidate_phrase = causal_event[header.index('event_phrases')]
-        effect_candidate_phrase = effect_event[header.index('event_phrases')]
-
-        causality_score = causal_strength_calculator.get_causality_score(causal_candidate_phrase, effect_candidate_phrase)
-        causality_scores.append((causal_candidate_phrase, effect_candidate_phrase, causality_score))
-
-    causality_scores_ordered = sorted(causality_scores, key=lambda x: float(x[2]), reverse=True)
-
-
-    for row in causality_scores_ordered[:100]:
-        if row[2] > 0:
-            print(row)
-
+    # for causal_chain in causal_chains:
+    #     print(' > '.join(causal_chain))
+    #
+    # print('Total chains: %d' % len(causal_chains))
+    end_time = timeit.default_timer()
+    print('Execution time: %.02f seconds' % (end_time-start_time))
