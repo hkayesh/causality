@@ -19,10 +19,13 @@ if __name__ == '__main__':
 
     data_rows = utilities.read_from_csv(dataset_file)
     del data_rows[0]
+
+    n_pair = 700
+    n_expand = 4
+
     X = []
     y = []
-
-    for data_row in data_rows[:700]:
+    for data_row in data_rows[:n_pair]:
         candidate_causal_pair = eval(data_row[2])
         label = 1 if data_row[3] == 'causal' else 0
 
@@ -31,7 +34,7 @@ if __name__ == '__main__':
         if len(candidate_causal_phrase) > 0 and len(candidate_effect_phrase) > 0:
             X.append((candidate_causal_pair[0], candidate_causal_pair[1]))
             y.append(label)
-
-    feed_forward.run(X, y)
+    print("Instances: %d, expand: %d" % (n_pair, n_expand))
+    feed_forward.run(X, y, n_expand)
 
 

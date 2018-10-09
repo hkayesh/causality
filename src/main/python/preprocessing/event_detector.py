@@ -1,6 +1,8 @@
+import itertools
 from nltk.tag.stanford import StanfordNERTagger
 from nltk.parse.stanford import StanfordDependencyParser
 from nltk.stem.wordnet import WordNetLemmatizer
+from nltk.tree import ParentedTree
 
 from preprocessing.preprocesssor import Preprocessor
 from utils.utilities import Utilities
@@ -74,6 +76,25 @@ class EventDetector:
 
         return event
 
+    def extract_soft_events(self, dependency_tree, dependency_relations, ner_tags):
+
+        entity_categories = ['PERSON', 'LOCATION', 'ORGANIZATION']
+        accepted_relation_keys = ['nsubj', 'nsubjpass', 'amod', 'dobj', 'advmod', 'nmod', 'xcomp', 'compound:prt', 'compound', 'neg']
+
+        keyword = self.lemmatizer.lemmatize(dependency_tree.label(), 'v')
+
+        event = {'keyword': keyword}
+        for dependency_relation in dependency_relations:
+            if len(dependency_relation) == 3:
+                head = dependency_relation[0]
+                relation = dependency_relation[1]
+                tail = dependency_relation[2]
+
+                if head[0] == keyword and relation in accepted_relation_keys:
+                    event[relation] = self.lemmatizer.lemmatize(tail[0].lower())
+        # print(event)
+        return event
+
     def extract_event_from_sentence(self, sentence):
         event = None
         sentence_preprocessor = Preprocessor(['remove_non_letters'])
@@ -106,10 +127,13 @@ class EventDetector:
             chunk_sent_ner_tags = self.ner_tagger.tag_sents([sentence.split() for sentence in sentences])
 
             for sent_dependencies, sent_ner_tags, sentence in zip(chunk_sent_dependencies, chunk_sent_ner_tags, sentences):
-                dependencies = [list(parse.triples()) for parse in sent_dependencies]
+                temp_sent_dependencies_1, temp_sent_dependencies_2 = itertools.tee(sent_dependencies, 2)
+                dependency_relations = [list(parse.triples()) for parse in temp_sent_dependencies_1]
+                dependency_tree = [parse.tree() for parse in temp_sent_dependencies_2][0]
 
-                if len(dependencies) > 0 and dependencies[0] is not None:
-                    event = self.extract_events_from_stanford_dependencies(dependencies[0], sent_ner_tags)
+                if len(dependency_relations) > 0 and dependency_relations[0] is not None and len(dependency_relations[0]) > 0:
+                    # print(sentence)
+                    event = self.extract_soft_events(dependency_tree, dependency_relations[0], sent_ner_tags)
                 else:
                     event = {'keyword': sentence}
 
