@@ -37,11 +37,6 @@ class CausalStrengthCalculator:
         if prior_probas['p_of_i_c'] > 0 and prior_probas['p_of_j_e'] > 0:
             cs_nec_of_i_c_and_j_e = prior_probas['p_of_i_c_and_j_e'] / ((prior_probas['p_of_i_c'] ** alpha) * prior_probas['p_of_j_e'])
             cs_suf_of_i_c_and_j_e = prior_probas['p_of_i_c_and_j_e'] / (prior_probas['p_of_i_c'] * (prior_probas['p_of_j_e'] ** alpha))
-
-            if cs_nec_of_i_c_and_j_e > 1 or cs_suf_of_i_c_and_j_e > 1:
-                print('**')
-                print(prior_probas)
-                exit()
             cs_of_i_c_and_j_e = (cs_nec_of_i_c_and_j_e ** cs_lambda) * (cs_suf_of_i_c_and_j_e ** (1 - cs_lambda))
 
         return cs_of_i_c_and_j_e

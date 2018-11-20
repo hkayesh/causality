@@ -15,6 +15,7 @@ from preprocessing.preprocesssor import Preprocessor
 from preprocessing.event_detector import EventDetector
 from utils.utilities import Utilities
 from visualization.manage_results import ManageResults
+from causality_detection.causal_stength_calculator import CausalStrengthCalculator
 
 import numpy as np
 
@@ -197,10 +198,8 @@ class CostFunction:
 
 
 class Evaluation:
-    def run_experiment(self, dataset_file, result_file, n_pair=100, n_expand=1):
+    def get_evaluation_data(self, dataset_file, n_pair):
         utilities = Utilities()
-        feed_forward = FeedForward()
-        manage_results = ManageResults(result_file)
 
         preprocessor = Preprocessor(['remove_stopwords', 'remove_non_letters', 'lemmatize'])
 
@@ -218,10 +217,56 @@ class Evaluation:
             if len(candidate_causal_phrase) > 0 and len(candidate_effect_phrase) > 0:
                 X.append((candidate_causal_pair[0], candidate_causal_pair[1]))
                 y.append(label)
-        print("Instances: %d, expand: %d" % (n_pair, n_expand))
-        result = feed_forward.run(X, y, n_expand)
+        return X, y
 
-        manage_results.save_dictionary_to_file(result, '%s-word' % str(n_expand))
+    def run_experiment(self, dataset_file, result_file, n_pair=1000, n_expand=1):
+
+        feed_forward = FeedForward()
+        manage_results = ManageResults(result_file)
+
+        print("Instances: %d, expand: %d" % (n_pair, n_expand))
+
+        X, y = self.get_evaluation_data(dataset_file=dataset_file, n_pair=n_pair)
+
+        ff_result = feed_forward.run(X, y, n_expand)
+
+        manage_results.save_dictionary_to_file(ff_result, '%s-word' % str(n_expand))
+
+    def run_experiment_on_luos_method(self, dataset_file, result_file, n_pair=1000, threshold=10):
+        manage_results = ManageResults(result_file)
+        X, y = self.get_evaluation_data(dataset_file=dataset_file, n_pair=n_pair)
+
+        causal_strength_calculator = CausalStrengthCalculator()
+        cv_scores = {
+            'accuracy': [],
+            'precision': [],
+            'recall': [],
+            'f_score': []
+        }
+
+        for random_state in range(0, 5):
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.40, random_state=random_state)
+            y_pred = []
+            for candidate in X_test:
+
+                causal_score = causal_strength_calculator.get_causality_score(candidate[0], candidate[1])
+                predicted_label = 1 if causal_score > threshold else 0
+                y_pred.append(predicted_label)
+
+            cv_scores['accuracy'].append(accuracy_score(y_test, y_pred))
+            cv_scores['precision'].append(precision_score(y_test, y_pred))
+            cv_scores['recall'].append(recall_score(y_test, y_pred))
+            cv_scores['f_score'].append(f1_score(y_test, y_pred))
+
+        result = {
+            'luo_scores': ("%.2f" % (np.mean(cv_scores['accuracy']) * 100),
+                       "%.2f" % (np.mean(cv_scores['precision']) * 100),
+                       "%.2f" % (np.mean(cv_scores['recall']) * 100),
+                       "%.2f" % (np.mean(cv_scores['f_score']) * 100)),
+        }
+
+        manage_results.save_dictionary_to_file(result, 'threshold-%s' % str(threshold))
+
 
 
 class Visualizer:
