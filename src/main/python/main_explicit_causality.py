@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     utilities = Utilities()
     preprocessor = Preprocessor(['remove_stopwords', 'remove_non_letters', 'lemmatize'])
-    dataset_file = 'causal_pairs_dataset.csv'
+    dataset_file = 'causal_pairs_dataset_old.csv'
 
     data_rows = utilities.read_from_csv(dataset_file)
     del data_rows[0]

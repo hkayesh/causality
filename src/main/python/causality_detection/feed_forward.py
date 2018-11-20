@@ -1,15 +1,20 @@
 import math
 import tensorflow as tf
 import networkx as nx
+from scipy import interp
 import matplotlib.pyplot as plt
 
 from tensorflow import keras
 from gensim.models.keyedvectors import KeyedVectors
 from sklearn.model_selection import train_test_split
 from nltk.tokenize import word_tokenize
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import roc_curve, auc
 
 from preprocessing.preprocesssor import Preprocessor
 from preprocessing.event_detector import EventDetector
+from utils.utilities import Utilities
+from visualization.manage_results import ManageResults
 
 import numpy as np
 
@@ -171,7 +176,7 @@ class HiddenLayer:
 
     def add_hidden_layer(self, model):
         layered_model = model
-        layered_model.add(keras.layers.Embedding(self.vocab_size, self.dimension, weights=[self.embedding_matrix]))
+        layered_model.add(keras.layers.Embedding(self.vocab_size, self.dimension, weights=[self.embedding_matrix], trainable=True))
         layered_model.add(keras.layers.GlobalAveragePooling1D())
         layered_model.add(keras.layers.Dense(self.dimension, activation=tf.nn.tanh))
         layered_model.add(keras.layers.Dense(1, activation=tf.nn.sigmoid))
@@ -190,9 +195,33 @@ class CostFunction:
 
         return optimized_model
 
+
 class Evaluation:
-    def __init__(self, score_type):
-        self.score_type = score_type
+    def run_experiment(self, dataset_file, result_file, n_pair=100, n_expand=1):
+        utilities = Utilities()
+        feed_forward = FeedForward()
+        manage_results = ManageResults(result_file)
+
+        preprocessor = Preprocessor(['remove_stopwords', 'remove_non_letters', 'lemmatize'])
+
+        data_rows = utilities.read_from_csv(dataset_file)
+        del data_rows[0]
+
+        X = []
+        y = []
+        for data_row in data_rows[:n_pair]:
+            candidate_causal_pair = eval(data_row[2])
+            label = 1 if data_row[3] == 'causal' else 0
+
+            candidate_causal_phrase = preprocessor.preprocess(candidate_causal_pair[0])
+            candidate_effect_phrase = preprocessor.preprocess(candidate_causal_pair[1])
+            if len(candidate_causal_phrase) > 0 and len(candidate_effect_phrase) > 0:
+                X.append((candidate_causal_pair[0], candidate_causal_pair[1]))
+                y.append(label)
+        print("Instances: %d, expand: %d" % (n_pair, n_expand))
+        result = feed_forward.run(X, y, n_expand)
+
+        manage_results.save_dictionary_to_file(result, '%s-word' % str(n_expand))
 
 
 class Visualizer:
@@ -244,8 +273,6 @@ class FeedForward:
         padding_maxlen = math.ceil(sum(lengths)/len(lengths))
         index_vectors = embedding.get_index_vectors(vocabulary, tokens_list, maxlen=padding_maxlen)
 
-        X_train, X_test, y_train, y_test = train_test_split(index_vectors, y, test_size=0.40, random_state=1)
-
         vocab_size = len(embedding_matrix)
 
         hidden_layer = HiddenLayer(n_layer=2, vocab_size=vocab_size, embedding_matrix=embedding_matrix, dimension=300)
@@ -256,17 +283,47 @@ class FeedForward:
         optimizer = tf.train.AdadeltaOptimizer(learning_rate=0.1)
         model = cost_function.optimize(optimizer=optimizer)
 
-        history = model.fit(X_train,
-                            y_train,
-                            epochs=40,
-                            batch_size=10,
-                            validation_split=0.5,
-                            verbose=1)
+        cv_scores = {
+            'accuracy': [],
+            'precision': [],
+            'recall': [],
+            'f_score': []
+        }
 
-        results = model.evaluate(X_test, y_test)
+        tprs = []
+        aucs = []
+        mean_fpr = np.linspace(0, 1, 100)
 
-        print(results)
+        for random_state in range(0, 5):
+            X_train, X_test, y_train, y_test = train_test_split(index_vectors, y, test_size=0.40, random_state=random_state)
 
-        visualizer = Visualizer(history=history)
-        # visualizer.plot_loss_history()
-        # visualizer.plot_accuracy_history()
+            model.fit(X_train, y_train, epochs=40, batch_size=10, validation_split=0.5, verbose=0)
+
+            y_pred = [pred_class[0] for pred_class in model.predict_classes(X_test)]
+
+            cv_scores['accuracy'].append(accuracy_score(y_test, y_pred))
+            cv_scores['precision'].append(precision_score(y_test, y_pred))
+            cv_scores['recall'].append(recall_score(y_test, y_pred))
+            cv_scores['f_score'].append(f1_score(y_test, y_pred))
+
+            # for ROC curve
+            probas_ = model.predict_proba(X_test)
+            fpr, tpr, thresholds = roc_curve(y_test, probas_, pos_label=1)
+            tprs.append(interp(mean_fpr, fpr, tpr))
+            tprs[-1][0] = 0.0
+            roc_auc = auc(fpr, tpr)
+            aucs.append(roc_auc)
+        mean_tpr = np.mean(tprs, axis=0)
+
+        result = {
+            'scores': ("%.2f" % (np.mean(cv_scores['accuracy'])*100),
+                       "%.2f" % (np.mean(cv_scores['precision'])*100),
+                       "%.2f" % (np.mean(cv_scores['recall'])*100),
+                       "%.2f" % (np.mean(cv_scores['f_score'])*100)),
+            'roc': {
+                'mean_tpr': mean_tpr.tolist(),
+                'mean_fpr': mean_fpr.tolist()
+            }
+        }
+
+        return result
