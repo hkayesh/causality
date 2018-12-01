@@ -1,4 +1,5 @@
 import math
+import json
 import tensorflow as tf
 import networkx as nx
 from scipy import interp
@@ -228,9 +229,18 @@ class Evaluation:
 
         X, y = self.get_evaluation_data(dataset_file=dataset_file, n_pair=n_pair)
 
+        preprocessed_dataset = {
+            'X': X,
+            'y': y
+        }
+
+        # save preprocessed causal pairs for evaluating Ponti's method
+        with open('preprocessed_dataset.json', 'w') as outfile:
+            json.dump(preprocessed_dataset, outfile)
+
         ff_result = feed_forward.run(X, y, n_expand)
 
-        manage_results.save_dictionary_to_file(ff_result, '%s-word' % str(n_expand))
+        # manage_results.save_dictionary_to_file(ff_result, '%s-word' % str(n_expand))
 
     def run_experiment_on_luos_method(self, dataset_file, result_file, n_pair=1000, threshold=10):
         manage_results = ManageResults(result_file)
@@ -266,7 +276,6 @@ class Evaluation:
         }
 
         manage_results.save_dictionary_to_file(result, 'threshold-%s' % str(threshold))
-
 
 
 class Visualizer:

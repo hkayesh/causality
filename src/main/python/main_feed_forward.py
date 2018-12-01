@@ -15,7 +15,7 @@ if __name__ == '__main__':
     dataset_file = 'causal_pairs_dataset.csv'
     result_file = 'results.txt'
     evaluation.run_experiment(dataset_file=dataset_file, result_file=result_file, n_pair=1000, n_expand=5)
-    evaluation.run_experiment_on_luos_method(dataset_file=dataset_file, result_file=result_file, n_pair=1000, threshold=10)
+    # evaluation.run_experiment_on_luos_method(dataset_file=dataset_file, result_file=result_file, n_pair=1000, threshold=10)
 
 
     ## data visualization
