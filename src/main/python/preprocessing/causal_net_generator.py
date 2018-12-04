@@ -195,3 +195,24 @@ class CausalNetGenerator:
 
             # utilities.save_or_append_list_as_csv(causal_pair_tokens, 'causal_pair_tokens.csv')
         return causal_pair_tokens
+
+
+class CausalNetGeneratorFromNews(CausalNetGenerator):
+    def __init__(self):
+        super(CausalNetGenerator, self).__init__()
+        self.article_dump_file = 'files/signalmedia-1m.jsonl'
+
+    def get_articles(self, number=None, offset=0):
+        full_texts = []
+        count = 0
+        for index, line in enumerate(smart_open(self.article_dump_file)):
+            if index < offset:
+                continue
+            if number is not None and count >= number:
+                break
+            article = json.loads(line)
+
+            full_texts.append(article['content'].strip())
+            count += 1
+
+        return full_texts

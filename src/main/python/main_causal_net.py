@@ -7,6 +7,7 @@ from multiprocessing import Manager, Process, cpu_count
 
 from utils.utilities import Utilities
 from preprocessing.causal_net_generator import CausalNetGenerator
+from preprocessing.causal_net_generator import CausalNetGeneratorFromNews
 
 
 def chunks(l, n):
@@ -37,18 +38,43 @@ if __name__ == '__main__':
     start = time.time()
     print("\nJob started at %s" % datetime.fromtimestamp(start).strftime('%Y-%m-%d %H:%M:%S'))
     causal_net_generator = CausalNetGenerator()
+    causal_net_generator_from_news = CausalNetGeneratorFromNews()
     utilities = Utilities()
     manager = Manager()
 
+    ## Generate causal net from wikipedia articles
+
     tokens = manager.list()
     num_threads = cpu_count()-1
-    number = 500000
-    offset = 500000
+    number = 1000000
+    offset = 0
     print("Number: %d and offset %d" % (number, offset))
 
     graph_path = 'causal_net.pickle'
 
     articles = causal_net_generator.get_articles(number=number, offset=offset)
+    dispatch_jobs(articles, num_threads, tokens)
+
+    graph = nx.read_gpickle(graph_path) if os.path.exists(graph_path) else None
+
+    causal_net = causal_net_generator.create_or_update_directed_causal_graph(tokens, graph=graph)
+
+    nx.write_gpickle(causal_net, graph_path)
+
+    net = nx.read_gpickle(graph_path)
+
+
+    ## Generate causal net from news articles
+
+    tokens = manager.list()
+    num_threads = cpu_count() - 1
+    number = 1000000
+    offset = 0
+    print("Number: %d and offset %d" % (number, offset))
+
+    graph_path = 'causal_net_news.pickle'
+
+    articles = causal_net_generator_from_news.get_articles(number=number, offset=offset)
     dispatch_jobs(articles, num_threads, tokens)
 
     graph = nx.read_gpickle(graph_path) if os.path.exists(graph_path) else None

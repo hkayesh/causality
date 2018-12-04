@@ -12,15 +12,35 @@ from visualization.visualizer import Visualizer
 if __name__ == '__main__':
     evaluation = Evaluation()
     visualizer = Visualizer()
-    dataset_file = 'causal_pairs_dataset.csv'
-    result_file = 'results.txt'
-    evaluation.run_experiment(dataset_file=dataset_file, result_file=result_file, n_pair=1000, n_expand=5)
-    # evaluation.run_experiment_on_luos_method(dataset_file=dataset_file, result_file=result_file, n_pair=1000, threshold=10)
+
+    experiment_key = 'cnet_wiki_exp_0'
+
+    settings = {
+        'dataset_file': 'causal_pairs_dataset.csv',
+        'result_file': 'results.json',
+        'embedding_model_file': 'files/GoogleNews-vectors-negative300.bin',
+        'causal_net_file': 'causal_net_1m.pickle',
+        'n_pair': 1000,
+        'n_expand': 0,
+        'result_key': 'cnet_wiki_exp_0'
+    }
+
+    # evaluation.run_experiment(settings=settings)
+
+    settings['threshold'] = 10
+    settings['result_key'] = 'luo_threshold_10'
+    # evaluation.run_experiment_on_luos_method(settings)
 
 
     ## data visualization
-    # visualizer.set_data_file_path(result_file)
-    # visualizer.display_line_chart()
-    # visualizer.display_roc_curves()
+    visualizer.set_data_file_path(settings['result_file'])
+    visualizer.set_output_dir(path='files/charts/')
+
+    visualizer.display_linechart_wiki_and_extension()
+    visualizer.display_roc_curves_wiki_and_extension()
+
+    visualizer.display_linechart_news_and_extension()
+    visualizer.display_roc_curves_news_and_extension()
+
 
 

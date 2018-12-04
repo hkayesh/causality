@@ -220,10 +220,20 @@ class Evaluation:
                 y.append(label)
         return X, y
 
-    def run_experiment(self, dataset_file, result_file, n_pair=1000, n_expand=1):
+    def run_experiment(self, settings):
+
+        dataset_file = settings['dataset_file']
+        result_file = settings['result_file']
+        causal_net_file = settings['causal_net_file']
+        embedding_model_file = settings['embedding_model_file']
+        n_pair = settings['n_pair']
+        n_expand = settings['n_expand']
 
         feed_forward = FeedForward()
         manage_results = ManageResults(result_file)
+
+        feed_forward.causal_net_file = causal_net_file
+        feed_forward.embedding_model_file = embedding_model_file
 
         print("Instances: %d, expand: %d" % (n_pair, n_expand))
 
@@ -240,9 +250,15 @@ class Evaluation:
 
         ff_result = feed_forward.run(X, y, n_expand)
 
-        # manage_results.save_dictionary_to_file(ff_result, '%s-word' % str(n_expand))
+        manage_results.save_dictionary_to_file(ff_result, settings['result_key'])
 
-    def run_experiment_on_luos_method(self, dataset_file, result_file, n_pair=1000, threshold=10):
+    def run_experiment_on_luos_method(self, settings):
+        dataset_file = settings['dataset_file']
+        result_file = settings['result_file']
+        n_pair = settings['n_pair']
+        threshold = settings['threshold']
+        result_key = settings['result_key']
+
         manage_results = ManageResults(result_file)
         X, y = self.get_evaluation_data(dataset_file=dataset_file, n_pair=n_pair)
 
@@ -269,13 +285,16 @@ class Evaluation:
             cv_scores['f_score'].append(f1_score(y_test, y_pred))
 
         result = {
-            'luo_scores': ("%.2f" % (np.mean(cv_scores['accuracy']) * 100),
-                       "%.2f" % (np.mean(cv_scores['precision']) * 100),
-                       "%.2f" % (np.mean(cv_scores['recall']) * 100),
-                       "%.2f" % (np.mean(cv_scores['f_score']) * 100)),
+            settings['result_key']: {
+                'scores': ("%.2f" % (np.mean(cv_scores['accuracy']) * 100),
+                           "%.2f" % (np.mean(cv_scores['precision']) * 100),
+                           "%.2f" % (np.mean(cv_scores['recall']) * 100),
+                           "%.2f" % (np.mean(cv_scores['f_score']) * 100)),
+
+            }
         }
 
-        manage_results.save_dictionary_to_file(result, 'threshold-%s' % str(threshold))
+        manage_results.save_dictionary_to_file(result, result_key=result_key)
 
 
 class Visualizer:
@@ -311,11 +330,14 @@ class Visualizer:
 
 
 class FeedForward:
+    def __init__(self):
+        self.embedding_model_file = 'files/GoogleNews-vectors-negative300.bin'
+        self.causal_net_file = 'causal_net_1m.pickle'
+
     def run(self, X, y, n_expand):
-        causal_net_path = 'causal_net_1m.pickle'
-        causal_net = nx.read_gpickle(causal_net_path)
+        causal_net = nx.read_gpickle(self.causal_net_file)
         feature_preparation = FeaturePreparation(X)
-        embedding = Embedding(n_dim=300, embedding_model_path='files/GoogleNews-vectors-negative300.bin')
+        embedding = Embedding(n_dim=300, embedding_model_path=self.embedding_model_file)
         vocabulary, embedding_matrix = embedding.get_embedding_matrix()
 
         # tokens_list = feature_preparation.get_tokens()

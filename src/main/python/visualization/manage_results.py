@@ -6,7 +6,7 @@ class ManageResults(object):
     def __init__(self, file_path):
         self.file_path = file_path
 
-    def save_dictionary_to_file(self, data_dict=None, label=None):
+    def save_dictionary_to_file(self, results, result_key):
         data = {}
 
         if os.path.exists(self.file_path):
@@ -16,11 +16,7 @@ class ManageResults(object):
                 if len(content) > 0:
                     data = json.loads(content)
 
-        for key in data_dict.keys():
-            if key in data.keys():
-                data[key][label] = data_dict[key]
-            else:
-                data[key] = {label: data_dict[key]}
+        data[result_key] = results
 
         with open(self.file_path, 'w') as outfile:
             json.dump(data, outfile)
