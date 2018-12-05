@@ -119,9 +119,7 @@ class Visualizer(object):
             print("No data to plot")
             return
 
-        # plot_data = [data[item] for item in labels.keys()]
-        # # labels = list(plot_data.keys())
-
+        plt.clf()
         for result_key in result_keys.keys():
             mean_tpr = data[result_key]['roc']['mean_tpr']
             mean_fpr = data[result_key]['roc']['mean_fpr']
@@ -155,9 +153,7 @@ class Visualizer(object):
             print("No data to plot")
             return
 
-        # plot_data = [data[item] for item in labels.keys()]
-        # # labels = list(plot_data.keys())
-
+        plt.clf()
         for result_key in result_keys.keys():
             mean_tpr = data[result_key]['roc']['mean_tpr']
             mean_fpr = data[result_key]['roc']['mean_fpr']

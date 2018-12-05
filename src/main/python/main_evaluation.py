@@ -25,7 +25,7 @@ if __name__ == '__main__':
     visualizer = Visualizer()
 
     settings = {
-        'dataset_file': 'causal_pairs_dataset.csv',
+        'dataset_file': 'causal_pairs_dataset_1000.csv',
         'result_file': 'results.json',
         'embedding_model_file': 'files/GoogleNews-vectors-negative300.bin',
         'causal_net_file': 'causal_net_1m.pickle',
@@ -112,8 +112,5 @@ if __name__ == '__main__':
         visualizer.display_linechart_news_and_extension()
         visualizer.display_roc_curves_news_and_extension()
 
-    # visualizer.set_data_file_path(result_file)
-    # visualizer.display_line_chart()
-    # visualizer.display_roc_curves()
 
 
