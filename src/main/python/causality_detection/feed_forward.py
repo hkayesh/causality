@@ -17,6 +17,7 @@ from preprocessing.event_detector import EventDetector
 from utils.utilities import Utilities
 from visualization.manage_results import ManageResults
 from causality_detection.causal_stength_calculator import CausalStrengthCalculator
+from causality_detection.causal_stength_calculator import MultiWordCausalStrengthCalculator
 
 import numpy as np
 
@@ -296,6 +297,51 @@ class Evaluation:
 
         manage_results.save_dictionary_to_file(result, result_key=result_key)
 
+    def run_experiment_on_sasakis_method(self, settings):
+        dataset_file = settings['dataset_file']
+        result_file = settings['result_file']
+        n_pair = settings['n_pair']
+        threshold = settings['threshold']
+        result_key = settings['result_key']
+
+        manage_results = ManageResults(result_file)
+        X, y = self.get_evaluation_data(dataset_file=dataset_file, n_pair=n_pair)
+
+        causal_strength_calculator = MultiWordCausalStrengthCalculator()
+        cv_scores = {
+            'accuracy': [],
+            'precision': [],
+            'recall': [],
+            'f_score': []
+        }
+
+        for random_state in range(0, 5):
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.40, random_state=random_state)
+            y_pred = []
+            for candidate in X_test:
+
+                causal_score = causal_strength_calculator.get_causality_score(candidate[0], candidate[1])
+                predicted_label = 1 if causal_score > threshold else 0
+                y_pred.append(predicted_label)
+
+            cv_scores['accuracy'].append(accuracy_score(y_test, y_pred))
+            cv_scores['precision'].append(precision_score(y_test, y_pred))
+            cv_scores['recall'].append(recall_score(y_test, y_pred))
+            cv_scores['f_score'].append(f1_score(y_test, y_pred))
+
+        result = {
+            settings['result_key']: {
+                'scores': ("%.2f" % (np.mean(cv_scores['accuracy']) * 100),
+                           "%.2f" % (np.mean(cv_scores['precision']) * 100),
+                           "%.2f" % (np.mean(cv_scores['recall']) * 100),
+                           "%.2f" % (np.mean(cv_scores['f_score']) * 100)),
+
+            }
+        }
+
+        print(result)
+
+        manage_results.save_dictionary_to_file(result, result_key=result_key)
 
 class Visualizer:
     def __init__(self, history):

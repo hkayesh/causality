@@ -101,6 +101,11 @@ if __name__ == '__main__':
         settings['result_key'] = experiment_key
         evaluation.run_experiment_on_luos_method(settings)
 
+    if experiment_key == 'sasaki_threshold_10':
+        settings['threshold'] = 10
+        settings['result_key'] = experiment_key
+        evaluation.run_experiment_on_sasakis_method(settings)
+
     ## data visualization
     if visualize == 'yes':
         visualizer.set_data_file_path(settings['result_file'])

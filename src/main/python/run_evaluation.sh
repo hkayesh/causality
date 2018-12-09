@@ -6,4 +6,6 @@ python main_evaluation.py --key cnet_news_exp_0; python main_evaluation.py --key
 
 python main_evaluation.py --key luo_threshold_10;
 
+python main_evaluation.py --key sasaki_threshold_10;
+
 python main_evaluation.py --visualize yes;

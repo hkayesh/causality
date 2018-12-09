@@ -1,4 +1,5 @@
 import re
+import csv
 import json
 import networkx as nx
 from nltk import pos_tag
@@ -8,6 +9,7 @@ from smart_open import smart_open
 
 from utils.utilities import Utilities
 from preprocessing.preprocesssor import Preprocessor
+from sasaki.sasaki_multi_word_causality import SasakiMultiWordCausality
 
 
 class CausalNetGenerator:
@@ -216,3 +218,28 @@ class CausalNetGeneratorFromNews(CausalNetGenerator):
             count += 1
 
         return full_texts
+
+
+class MultiWordCausalNetGeneratorFromNews(CausalNetGeneratorFromNews):
+    def __init__(self):
+        super(CausalNetGeneratorFromNews, self).__init__()
+        self.article_dump_file = 'files/signalmedia-1m.jsonl'  # https://research.signalmedia.co/newsir16/signal-dataset.html
+        self.sasaki_multi_word_causality = SasakiMultiWordCausality()
+        self.multi_word_verbs = self.sasaki_multi_word_causality.get_multi_word_verbs()
+
+    def get_causal_pair_tokens(self, causal_pair_phrase):
+        cause_tokens = word_tokenize(causal_pair_phrase[0])
+        effect_tokens = word_tokenize(causal_pair_phrase[1])
+        for verb in self.multi_word_verbs:
+            if re.search(r'\b' + verb + r'\b', causal_pair_phrase[0]):
+                cause_tokens.append(verb)
+
+            if re.search(r'\b' + verb + r'\b', causal_pair_phrase[1]):
+                effect_tokens.append(verb)
+
+        causal_pairs = []
+        for cause_token in cause_tokens:
+            cause_replicated_list = [cause_token] * len(effect_tokens)
+            causal_pairs += list(zip(cause_replicated_list, effect_tokens))
+
+        return causal_pairs

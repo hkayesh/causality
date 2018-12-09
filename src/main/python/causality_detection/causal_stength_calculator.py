@@ -1,7 +1,9 @@
+import re
 import datetime
 import networkx as nx
 from nltk.corpus import wordnet as wn
 from nltk.tokenize import word_tokenize
+from sasaki.sasaki_multi_word_causality import SasakiMultiWordCausality
 
 class CausalStrengthCalculator:
     def __init__(self):
@@ -123,3 +125,38 @@ class CausalStrengthCalculator:
 
         return causal_candidates
 
+
+class MultiWordCausalStrengthCalculator(CausalStrengthCalculator):
+    def __init__(self):
+        super(CausalStrengthCalculator, self).__init__()
+        self.causal_net_path = 'causal_net_news_multi_word.pickle'
+        self.causal_net = nx.read_gpickle(self.causal_net_path)
+        self.N = len(self.causal_net.nodes())
+        self.M = sum([edge[2]['freq'] for edge in self.causal_net.edges(data=True)])
+
+
+        self.sasaki_multi_word_causality = SasakiMultiWordCausality()
+        self.multi_word_verbs = self.sasaki_multi_word_causality.get_multi_word_verbs()
+
+
+    def get_causality_score(self, causal_candidate_phrase, effect_candidate_phrase):
+        T_1 = word_tokenize(causal_candidate_phrase)
+        T_2 = word_tokenize(effect_candidate_phrase)
+
+        for verb in self.multi_word_verbs:
+            if re.search(r'\b' + verb + r'\b', causal_candidate_phrase):
+                T_1.append(verb)
+            if re.search(r'\b' + verb + r'\b', effect_candidate_phrase):
+                T_2.append(verb)
+
+        total_causal_strength = 0
+
+        for i_c in T_1:
+            for j_e in T_2:
+                causal_strength = self.get_causal_strength(i_c, j_e, cs_lambda=0.7)
+                total_causal_strength += causal_strength
+
+        # causal_score = total_causal_strength / (len(T_1) + len(T_2))
+        causal_score = total_causal_strength / (len(T_1) * len(T_2))
+
+        return causal_score
