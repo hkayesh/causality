@@ -171,7 +171,7 @@ class Visualizer(object):
         self.check_output_dir()
         plt.savefig(self.output_dir + 'roc_curve_news.pdf')
 
-    def plot_loss_history(self, result_key, file_path):
+    def plot_loss_history(self, result_key, chart_title, file_path):
         data = self.read_result_data()
         loss = data[result_key]['model_loss']['training']
         val_loss = data[result_key]['model_loss']['validation']
@@ -181,14 +181,15 @@ class Visualizer(object):
 
         plt.plot(epochs, loss, 'r--', linewidth=1, label='Training loss')
         plt.plot(epochs, val_loss, 'g-', linewidth=1, label='Validation loss')
-        plt.xlabel('Iterations')
+        plt.xlabel('Epochs')
         plt.ylabel('Loss')
+        plt.title(chart_title)
         plt.legend()
 
         self.check_output_dir()
         plt.savefig(self.output_dir + file_path)
 
-    def plot_accuracy_history(self, result_key, file_path):
+    def plot_accuracy_history(self, result_key, chart_title,  file_path):
         data = self.read_result_data()
         acc = data[result_key]['model_accuracy']['training']
         val_acc = data[result_key]['model_accuracy']['validation']
@@ -198,36 +199,27 @@ class Visualizer(object):
 
         plt.plot(epochs, acc, 'r--', linewidth=1, label='Training acc')
         plt.plot(epochs, val_acc, 'g-', linewidth=1, label='Validation acc')
-        plt.xlabel('Iterations')
+        plt.xlabel('Epochs')
         plt.ylabel('Accuracy')
+        plt.title(chart_title)
         plt.legend()
 
         self.check_output_dir()
         plt.savefig(self.output_dir + file_path)
 
-
     def display_accuracy_history(self):
-        result_keys = {
-            'cnet_news_exp_0': 'model_acc_0_word.pdf',
-            'cnet_news_exp_1': 'model_acc_1_word.pdf',
-            'cnet_news_exp_2': 'model_acc_2_word.pdf',
-            'cnet_news_exp_3': 'model_acc_3_word.pdf',
-            'cnet_news_exp_4': 'model_acc_4_word.pdf',
-            'cnet_news_exp_5': 'model_acc_5_word.pdf'
-        }
-
-        for result_key in result_keys.keys():
-            self.plot_accuracy_history(result_key, result_keys[result_key])
+        self.plot_accuracy_history('cnet_wiki_exp_0', '0-word Extension', 'model_acc_0_word.pdf')
+        self.plot_accuracy_history('cnet_wiki_exp_1', '1-word Extension', 'model_acc_1_word.pdf')
+        self.plot_accuracy_history('cnet_wiki_exp_2', '2-word Extension', 'model_acc_2_word.pdf')
+        self.plot_accuracy_history('cnet_wiki_exp_3', '3-word Extension', 'model_acc_3_word.pdf')
+        self.plot_accuracy_history('cnet_wiki_exp_4', '4-word Extension', 'model_acc_4_word.pdf')
+        self.plot_accuracy_history('cnet_wiki_exp_5', '5-word Extension', 'model_acc_5_word.pdf')
 
     def display_loss_history(self):
-        result_keys = {
-            'cnet_news_exp_0': 'model_loss_0_word.pdf',
-            'cnet_news_exp_1': 'model_loss_1_word.pdf',
-            'cnet_news_exp_2': 'model_loss_2_word.pdf',
-            'cnet_news_exp_3': 'model_loss_3_word.pdf',
-            'cnet_news_exp_4': 'model_loss_4_word.pdf',
-            'cnet_news_exp_5': 'model_loss_5_word.pdf'
-        }
 
-        for result_key in result_keys.keys():
-            self.plot_loss_history(result_key, result_keys[result_key])
+        self.plot_loss_history('cnet_wiki_exp_0', '0-word Extension', 'model_loss_0_word.pdf')
+        self.plot_loss_history('cnet_wiki_exp_1', '1-word Extension', 'model_loss_1_word.pdf')
+        self.plot_loss_history('cnet_wiki_exp_2', '2-word Extension', 'model_loss_2_word.pdf')
+        self.plot_loss_history('cnet_wiki_exp_3', '3-word Extension', 'model_loss_3_word.pdf')
+        self.plot_loss_history('cnet_wiki_exp_4', '4-word Extension', 'model_loss_4_word.pdf')
+        self.plot_loss_history('cnet_wiki_exp_5', '5-word Extension', 'model_loss_5_word.pdf')

@@ -448,6 +448,11 @@ class FeedForward:
 
         mean_tpr = np.mean(tprs, axis=0)
 
+        mean_model_accuracy_training = [i*100 for i in np.mean(model_accuracy_training, axis=0)]
+        mean_model_accuracy_validation = [i*100 for i in np.mean(model_accuracy_validation, axis=0)]
+        mean_model_loss_training = [i*100 for i in np.mean(model_loss_training, axis=0)]
+        mean_model_loss_validation = [i*100 for i in np.mean(model_loss_validation, axis=0)]
+
         result = {
             'scores': ("%.2f" % (np.mean(cv_scores['accuracy'])*100),
                        "%.2f" % (np.mean(cv_scores['precision'])*100),
@@ -458,12 +463,12 @@ class FeedForward:
                 'mean_fpr': mean_fpr.tolist()
             },
             'model_accuracy': {
-                'training': np.mean(model_accuracy_training, axis=0).tolist(),
-                'validation': np.mean(model_accuracy_validation, axis=0).tolist()
+                'training': mean_model_accuracy_training,
+                'validation': mean_model_accuracy_validation
             },
             'model_loss': {
-                'training': np.mean(model_loss_training, axis=0).tolist(),
-                'validation': np.mean(model_loss_validation, axis=0).tolist()
+                'training': mean_model_loss_training,
+                'validation': mean_model_loss_validation
             }
 
         }
