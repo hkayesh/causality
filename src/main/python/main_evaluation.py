@@ -117,5 +117,8 @@ if __name__ == '__main__':
         visualizer.display_linechart_news_and_extension()
         visualizer.display_roc_curves_news_and_extension()
 
+        visualizer.display_accuracy_history()
+        visualizer.display_loss_history()
+
 
 

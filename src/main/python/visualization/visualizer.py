@@ -170,3 +170,64 @@ class Visualizer(object):
 
         self.check_output_dir()
         plt.savefig(self.output_dir + 'roc_curve_news.pdf')
+
+    def plot_loss_history(self, result_key, file_path):
+        data = self.read_result_data()
+        loss = data[result_key]['model_loss']['training']
+        val_loss = data[result_key]['model_loss']['validation']
+        epochs = range(1, len(loss)+1)
+
+        plt.clf()
+
+        plt.plot(epochs, loss, 'r--', linewidth=1, label='Training loss')
+        plt.plot(epochs, val_loss, 'g-', linewidth=1, label='Validation loss')
+        plt.xlabel('Iterations')
+        plt.ylabel('Loss')
+        plt.legend()
+
+        self.check_output_dir()
+        plt.savefig(self.output_dir + file_path)
+
+    def plot_accuracy_history(self, result_key, file_path):
+        data = self.read_result_data()
+        acc = data[result_key]['model_accuracy']['training']
+        val_acc = data[result_key]['model_accuracy']['validation']
+        epochs = list(range(1, len(acc)+1))
+
+        plt.clf()   # clear figure
+
+        plt.plot(epochs, acc, 'r--', linewidth=1, label='Training acc')
+        plt.plot(epochs, val_acc, 'g-', linewidth=1, label='Validation acc')
+        plt.xlabel('Iterations')
+        plt.ylabel('Accuracy')
+        plt.legend()
+
+        self.check_output_dir()
+        plt.savefig(self.output_dir + file_path)
+
+
+    def display_accuracy_history(self):
+        result_keys = {
+            'cnet_news_exp_0': 'model_acc_0_word.pdf',
+            'cnet_news_exp_1': 'model_acc_1_word.pdf',
+            'cnet_news_exp_2': 'model_acc_2_word.pdf',
+            'cnet_news_exp_3': 'model_acc_3_word.pdf',
+            'cnet_news_exp_4': 'model_acc_4_word.pdf',
+            'cnet_news_exp_5': 'model_acc_5_word.pdf'
+        }
+
+        for result_key in result_keys.keys():
+            self.plot_accuracy_history(result_key, result_keys[result_key])
+
+    def display_loss_history(self):
+        result_keys = {
+            'cnet_news_exp_0': 'model_loss_0_word.pdf',
+            'cnet_news_exp_1': 'model_loss_1_word.pdf',
+            'cnet_news_exp_2': 'model_loss_2_word.pdf',
+            'cnet_news_exp_3': 'model_loss_3_word.pdf',
+            'cnet_news_exp_4': 'model_loss_4_word.pdf',
+            'cnet_news_exp_5': 'model_loss_5_word.pdf'
+        }
+
+        for result_key in result_keys.keys():
+            self.plot_loss_history(result_key, result_keys[result_key])

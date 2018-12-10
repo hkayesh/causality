@@ -416,10 +416,15 @@ class FeedForward:
         aucs = []
         mean_fpr = np.linspace(0, 1, 100)
 
+        model_accuracy_training = []
+        model_accuracy_validation = []
+        model_loss_training = []
+        model_loss_validation = []
+
         for random_state in range(0, 5):
             X_train, X_test, y_train, y_test = train_test_split(index_vectors, y, test_size=0.40, random_state=random_state)
 
-            model.fit(X_train, y_train, epochs=40, batch_size=10, validation_split=0.5, verbose=0)
+            history = model.fit(X_train, y_train, epochs=40, batch_size=10, validation_split=0.5, verbose=0)
 
             y_pred = [pred_class[0] for pred_class in model.predict_classes(X_test)]
 
@@ -435,6 +440,12 @@ class FeedForward:
             tprs[-1][0] = 0.0
             roc_auc = auc(fpr, tpr)
             aucs.append(roc_auc)
+
+            model_accuracy_training.append(history.history['acc'])
+            model_accuracy_validation.append(history.history['val_acc'])
+            model_loss_training.append(history.history['loss'])
+            model_loss_validation.append(history.history['val_loss'])
+
         mean_tpr = np.mean(tprs, axis=0)
 
         result = {
@@ -445,7 +456,16 @@ class FeedForward:
             'roc': {
                 'mean_tpr': mean_tpr.tolist(),
                 'mean_fpr': mean_fpr.tolist()
+            },
+            'model_accuracy': {
+                'training': np.mean(model_accuracy_training, axis=0).tolist(),
+                'validation': np.mean(model_accuracy_validation, axis=0).tolist()
+            },
+            'model_loss': {
+                'training': np.mean(model_loss_training, axis=0).tolist(),
+                'validation': np.mean(model_loss_validation, axis=0).tolist()
             }
+
         }
 
         return result
