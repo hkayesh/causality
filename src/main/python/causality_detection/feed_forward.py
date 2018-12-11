@@ -381,6 +381,26 @@ class FeedForward:
         self.embedding_model_file = 'files/GoogleNews-vectors-negative300.bin'
         self.causal_net_file = 'causal_net_1m.pickle'
 
+    def display_error_analysis(self, X_test, y_test, y_pred):
+        false_positives = ['FP']
+        false_negatives = ['FN']
+
+        for index, x in enumerate(X_test):
+            if y_test[index] == 1 and y_pred[index] == 0:
+                false_negatives.append(x)
+            elif y_test[index] == 0 and y_pred[index] == 1:
+                false_positives.append(x)
+            else:
+                continue
+
+        for fp in false_positives:
+            print(fp)
+
+        for fn in false_negatives:
+            print(fn)
+
+        return
+
     def run(self, X, y, n_expand):
         causal_net = nx.read_gpickle(self.causal_net_file)
         feature_preparation = FeaturePreparation(X)
@@ -447,6 +467,11 @@ class FeedForward:
             model_accuracy_validation.append(history.history['val_acc'])
             model_loss_training.append(history.history['loss'])
             model_loss_validation.append(history.history['val_loss'])
+
+            ## this code is only for error analysis. It has nothin to do with the actual evaluation
+            # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.40, random_state=random_state)
+            # self.display_error_analysis(X_test, y_test, y_pred)
+
 
         mean_tpr = np.mean(tprs, axis=0)
 
