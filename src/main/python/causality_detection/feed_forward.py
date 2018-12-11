@@ -181,7 +181,8 @@ class HiddenLayer:
         layered_model = model
         layered_model.add(keras.layers.Embedding(self.vocab_size, self.dimension, weights=[self.embedding_matrix], trainable=True))
         layered_model.add(keras.layers.GlobalAveragePooling1D())
-        layered_model.add(keras.layers.Dense(self.dimension, activation=tf.nn.tanh))
+        layered_model.add(keras.layers.Dense(self.dimension, activation=tf.nn.relu))
+        layered_model.add(keras.layers.Dense(16, activation=tf.nn.relu))
         layered_model.add(keras.layers.Dense(1, activation=tf.nn.sigmoid))
 
         return layered_model
@@ -421,10 +422,11 @@ class FeedForward:
         model_loss_training = []
         model_loss_validation = []
 
-        for random_state in range(0, 5):
+        for random_state in range(0, 1):
+        # for random_state in range(0, 5):
             X_train, X_test, y_train, y_test = train_test_split(index_vectors, y, test_size=0.40, random_state=random_state)
 
-            history = model.fit(X_train, y_train, epochs=40, batch_size=10, validation_split=0.5, verbose=0)
+            history = model.fit(X_train, y_train, epochs=40, batch_size=40, validation_split=0.5, verbose=0)
 
             y_pred = [pred_class[0] for pred_class in model.predict_classes(X_test)]
 
