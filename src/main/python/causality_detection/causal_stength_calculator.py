@@ -7,7 +7,8 @@ from sasaki.sasaki_multi_word_causality import SasakiMultiWordCausality
 
 class CausalStrengthCalculator:
     def __init__(self):
-        self.causal_net_path = 'causal_net_1m.pickle'
+        # self.causal_net_path = 'causal_net_1m.pickle'
+        self.causal_net_path = 'causal_net_news.pickle'
         self.causal_net = nx.read_gpickle(self.causal_net_path)
         self.N = len(self.causal_net.nodes())
         self.M = sum([edge[2]['freq'] for edge in self.causal_net.edges(data=True)])
