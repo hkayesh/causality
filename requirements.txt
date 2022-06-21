@@ -18,7 +18,7 @@ matplotlib==2.2.2
 mccabe==0.6.1
 networkx==2.1
 nltk==3.3
-numpy==1.14.5
+numpy==1.22.0
 py-dateutil==2.2
 pybuilder==0.11.17
 pycodestyle==2.3.1
